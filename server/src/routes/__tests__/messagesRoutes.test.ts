@@ -26,7 +26,7 @@ describe('messages routes', () => {
 
     const express = (await import('express')).default;
     const { createMessagesRouter } = await import('../messages');
-    const { createAnalyticsRouter } = await import('../analytics');
+  const { createTranslationAnalyticsRouter } = await import('../translationAnalytics');
     const translationModule = await import('../../services/translationService');
     const databaseModule = await import('../../storage/database');
 
@@ -48,7 +48,7 @@ describe('messages routes', () => {
     app = express();
     app.use(express.json());
     app.use('/api/messages', createMessagesRouter(io));
-    app.use('/api/analytics', createAnalyticsRouter());
+  app.use('/api/analytics', createTranslationAnalyticsRouter());
   });
 
   afterEach(() => {

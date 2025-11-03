@@ -12,7 +12,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { createHealthRouter } from './routes/health';
 import { createMessagesRouter } from './routes/messages';
 import { createPersonaRouter } from './routes/persona';
-import { createAnalyticsRouter } from './routes/analytics';
+import { createTranslationAnalyticsRouter } from './routes/translationAnalytics';
 import { overviewRouter } from './routes/overview';
 import { logger } from './utils/logger';
 
@@ -49,7 +49,7 @@ app.use('/media', express.static(config.mediaRoot));
 app.use('/healthz', createHealthRouter());
 app.use('/api/messages', createMessagesRouter(io));
 app.use('/api/persona', createPersonaRouter(io));
-app.use('/api/analytics', createAnalyticsRouter());
+app.use('/api/analytics', createTranslationAnalyticsRouter());
 app.use('/overview', overviewRouter);
 
 app.use(errorHandler);
