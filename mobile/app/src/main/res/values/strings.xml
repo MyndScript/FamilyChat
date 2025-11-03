@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Chat Khanavadegi</string>
+    <string name="persona_khadija">خديجه</string>
+    <string name="persona_brian">Brian</string>
+    <string name="speak_button">Reply</string>
+    <string name="stop_button">Stop</string>
+    <string name="recording_indicator">Recording…</string>
+</resources>

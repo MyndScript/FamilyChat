@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: chat-khanavadegi-server
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_FILE
+        value: /var/data/chat.db
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: CLIENT_ORIGIN
+        value: "*"
+    disk:
+      name: chat-data
+      mountPath: /var/data
+      sizeGB: 1

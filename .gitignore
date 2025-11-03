@@ -1,0 +1,22 @@
+
+# Node server artifacts
+server/node_modules/
+server/dist/
+
+# Android/Gradle artifacts
+mobile/.gradle/
+mobile/.idea/
+mobile/local.properties
+mobile/app/build/
+mobile/build/
+
+# SQLite / media storage
+storage/
+
+# IDE/vendor clutter
+.DS_Store
+Thumbs.db
+*.log
+
+# AI instructions (keep local only)
+.github/instructions/codacy.instructions.md
