@@ -64,8 +64,12 @@ class ChatViewModel(
                 _uiState.update { state ->
                     state.copy(messages = state.messages.upsert(message))
                 }
-                if (message.sender == Persona.Brian && message.toneAdjustedText != null) {
-                    _events.emit(UiEvent.PlayAudio(message.toneAdjustedText, "fa", message.audioUrl))
+                val persona = uiState.value.persona
+                if (persona == Persona.Khadija && message.sender == Persona.Brian) {
+                    val spokenText = message.toneAdjustedText ?: message.translatedText
+                    if (!spokenText.isNullOrBlank()) {
+                        _events.emit(UiEvent.PlayAudio(spokenText, "fa", message.audioUrl))
+                    }
                 }
             }
         }
@@ -75,8 +79,11 @@ class ChatViewModel(
                     state.copy(messages = state.messages.upsert(message))
                 }
                 val persona = uiState.value.persona
-                if (persona == Persona.Khadija && message.sender == Persona.Brian && message.toneAdjustedText != null) {
-                    _events.emit(UiEvent.PlayAudio(message.toneAdjustedText, "fa", message.audioUrl))
+                if (persona == Persona.Khadija && message.sender == Persona.Brian) {
+                    val spokenText = message.toneAdjustedText ?: message.translatedText
+                    if (!spokenText.isNullOrBlank()) {
+                        _events.emit(UiEvent.PlayAudio(spokenText, "fa", message.audioUrl))
+                    }
                 }
             }
         }

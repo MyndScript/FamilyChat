@@ -3,7 +3,7 @@ import path from 'node:path';
 import { v4 as uuid } from 'uuid';
 
 import { config } from '../config';
-import { attachmentRepository, messageRepository, reactionRepository } from '../storage/database';
+import { attachmentRepository, messageRepository, reactionRepository, type MessageCreate } from '../storage/database';
 import { Attachment, Message, PersonaId, Reaction } from '../types/message';
 import { logger } from '../utils/logger';
 import { translationService } from './translationService';
@@ -80,49 +80,23 @@ export class MessageService {
     const createdAt = new Date().toISOString();
     const audioUrl = this.toPublicUrl(audioFilename);
 
-    const messageRecord = {
+    const messageRecord = this.buildVoiceMessageRecord({
       id,
-      senderPersonaId: personaId,
-      originalText: null,
+      personaId,
       originalLocale,
-      translatedText: null,
-      translatedLocale: null,
-      toneAdjustedText: null,
-      translationProvider: null,
       audioUrl,
-      transcriptionText: null,
-      transcriptionConfidence: null,
-      messageType: 'voice' as const,
-      createdAt,
-    };
-
-    messageRepository.create(messageRecord);
-
-    const attachmentId = uuid();
-    attachmentRepository.create({
-      id: attachmentId,
-      messageId: id,
-      uri: audioUrl,
-      mimeType: 'audio/m4a',
-      mediaType: 'audio',
       createdAt,
     });
 
-    const initialMessage: Message = {
-      ...messageRecord,
-      media: [
-        {
-          id: attachmentId,
-          messageId: id,
-          uri: audioUrl,
-          mimeType: 'audio/m4a',
-          mediaType: 'audio',
-          createdAt,
-        },
-      ],
-      translationProvider: null,
-      reactions: [],
-    };
+    messageRepository.create(messageRecord);
+
+    const attachment = this.saveVoiceAttachment({
+      messageId: id,
+      audioUrl,
+      createdAt,
+    });
+
+    const initialMessage = this.buildInitialVoiceMessage(messageRecord, attachment);
 
     void this.processVoiceMessage({
       messageId: id,
@@ -139,6 +113,24 @@ export class MessageService {
     const id = uuid();
     const createdAt = new Date().toISOString();
     const originalLocale: 'en' | 'fa' | null = caption ? (personaId === 'brian' ? 'en' : 'fa') : null;
+
+    const messageRecord = {
+      id,
+      senderPersonaId: personaId,
+      originalText: caption ?? null,
+      originalLocale,
+      translatedText: null,
+      translatedLocale: null,
+      toneAdjustedText: null,
+      translationProvider: null,
+      audioUrl: null,
+      transcriptionText: null,
+      transcriptionConfidence: null,
+      messageType: 'media' as const,
+      createdAt,
+    };
+
+    messageRepository.create(messageRecord);
 
     const attachments: Attachment[] = files.map((file) => {
       const attachmentId = uuid();
@@ -161,24 +153,6 @@ export class MessageService {
       };
     });
 
-    const messageRecord = {
-      id,
-      senderPersonaId: personaId,
-      originalText: caption ?? null,
-      originalLocale,
-      translatedText: null,
-      translatedLocale: null,
-      toneAdjustedText: null,
-    translationProvider: null,
-      audioUrl: null,
-      transcriptionText: null,
-      transcriptionConfidence: null,
-      messageType: 'media' as const,
-      createdAt,
-    };
-
-    messageRepository.create(messageRecord);
-
     return {
       ...messageRecord,
       media: attachments,
@@ -197,6 +171,85 @@ export class MessageService {
   private toPublicUrl(filename: string): string {
     const relative = path.relative(config.mediaRoot, filename);
     return `/media/${relative.replace(/\\/g, '/')}`;
+  }
+
+  private buildVoiceMessageRecord({
+    id,
+    personaId,
+    originalLocale,
+    audioUrl,
+    createdAt,
+  }: {
+    id: string;
+    personaId: PersonaId;
+    originalLocale: 'fa' | 'en';
+    audioUrl: string;
+    createdAt: string;
+  }): MessageCreate {
+    return {
+      id,
+      senderPersonaId: personaId,
+      originalText: null,
+      originalLocale,
+      translatedText: null,
+      translatedLocale: null,
+      toneAdjustedText: null,
+      translationProvider: null,
+      audioUrl,
+      transcriptionText: null,
+      transcriptionConfidence: null,
+      messageType: 'voice',
+      createdAt,
+    };
+  }
+
+  private saveVoiceAttachment({
+    messageId,
+    audioUrl,
+    createdAt,
+  }: {
+    messageId: string;
+    audioUrl: string;
+    createdAt: string;
+  }): Attachment {
+    const attachmentId = uuid();
+    const attachment: Attachment = {
+      id: attachmentId,
+      messageId,
+      uri: audioUrl,
+      mimeType: 'audio/m4a',
+      mediaType: 'audio',
+      createdAt,
+    };
+    attachmentRepository.create({
+      id: attachmentId,
+      messageId,
+      uri: audioUrl,
+      mimeType: 'audio/m4a',
+      mediaType: 'audio',
+      createdAt,
+    });
+    return attachment;
+  }
+
+  private buildInitialVoiceMessage(record: MessageCreate, attachment: Attachment): Message {
+    return {
+      id: record.id,
+      senderPersonaId: record.senderPersonaId as PersonaId,
+      originalText: record.originalText,
+      originalLocale: record.originalLocale as Message['originalLocale'],
+      translatedText: record.translatedText,
+      translatedLocale: record.translatedLocale as Message['translatedLocale'],
+      toneAdjustedText: record.toneAdjustedText,
+      translationProvider: null,
+      audioUrl: record.audioUrl,
+      transcriptionText: record.transcriptionText,
+      transcriptionConfidence: record.transcriptionConfidence,
+      messageType: record.messageType,
+      createdAt: record.createdAt,
+      media: [attachment],
+      reactions: [],
+    };
   }
 
   private async processVoiceMessage({

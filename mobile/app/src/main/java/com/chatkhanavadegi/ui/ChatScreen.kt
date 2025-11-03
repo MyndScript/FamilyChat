@@ -248,11 +248,20 @@ private fun MessageBubble(message: ChatMessage, isMine: Boolean, onReaction: (St
                 .padding(16.dp)
                 .fillMaxWidth(0.9f)
         ) {
-            val primaryText = when {
-                !message.toneAdjustedText.isNullOrBlank() -> message.toneAdjustedText
-                !message.translatedText.isNullOrBlank() -> message.translatedText
-                !message.originalText.isNullOrBlank() -> message.originalText
-                else -> null
+            val primaryText = if (isMine) {
+                when {
+                    !message.originalText.isNullOrBlank() -> message.originalText
+                    !message.translatedText.isNullOrBlank() -> message.translatedText
+                    !message.toneAdjustedText.isNullOrBlank() -> message.toneAdjustedText
+                    else -> null
+                }
+            } else {
+                when {
+                    !message.toneAdjustedText.isNullOrBlank() -> message.toneAdjustedText
+                    !message.translatedText.isNullOrBlank() -> message.translatedText
+                    !message.originalText.isNullOrBlank() -> message.originalText
+                    else -> null
+                }
             }
             primaryText?.let { textValue ->
                 Text(
